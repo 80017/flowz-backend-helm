@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Values.service.name }}-service"
+  labels:
+    app: "{{ .Values.service.name }}-app"
+    tier: backend
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: "{{ .Values.service.name }}-app"
+    tier: backend
+  ports:
+  - port: 3039
+    targetPort: 3039
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.service.name }}-deployment"
+  labels:
+    app: "{{ .Values.service.name }}-app"
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.service.name }}-app"
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.service.name }}-app"
+        tier: backend
+    spec:
+      containers:
+      - name: "{{ .Values.service.name }}-container"
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        env:
+        - name: RDBHost
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: RDBHost
+        - name: RDBPort
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: RDBPort
+        - name: rdb
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: rdb
+        - name: x_api_token
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: x_api_token
+        - name: domainKey
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: domainKey
+        - name: apiKey
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: apiKey
+        - name: site
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: site
+        - name: secret
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.configMapKeyRef.name }}
+              key: secret
+        ports:
+        - containerPort: 3039
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
